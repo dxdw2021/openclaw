@@ -30,39 +30,39 @@ async function requireRiskAcknowledgement(params: {
 
   await params.prompter.note(
     [
-      "Security warning — please read.",
+      "安全警告 — 请阅读。",
       "",
-      "OpenClaw is a hobby project and still in beta. Expect sharp edges.",
-      "By default, OpenClaw is a personal agent: one trusted operator boundary.",
-      "This bot can read files and run actions if tools are enabled.",
-      "A bad prompt can trick it into doing unsafe things.",
+      "OpenClaw 是一个个人项目，目前仍处于测试阶段。请注意潜在的不完善之处。",
+      "默认情况下，OpenClaw 是一个个人助手：一个受信任的操作边界。",
+      "如果启用了工具，此机器人可以读取文件并执行操作。",
+      "恶意的提示词可能会诱导它执行不安全的操作。",
       "",
-      "OpenClaw is not a hostile multi-tenant boundary by default.",
-      "If multiple users can message one tool-enabled agent, they share that delegated tool authority.",
+      "默认情况下，OpenClaw 并不是一个敌对的多租户边界。",
+      "如果多个用户可以向一个启用了工具的代理发送消息，他们将共享该代理的工具权限。",
       "",
-      "If you’re not comfortable with security hardening and access control, don’t run OpenClaw.",
-      "Ask someone experienced to help before enabling tools or exposing it to the internet.",
+      "如果您不熟悉安全加固和访问控制，请不要运行 OpenClaw。",
+      "在启用工具或将其暴露到互联网之前，请咨询有经验的人员。",
       "",
-      "Recommended baseline:",
-      "- Pairing/allowlists + mention gating.",
-      "- Multi-user/shared inbox: split trust boundaries (separate gateway/credentials, ideally separate OS users/hosts).",
-      "- Sandbox + least-privilege tools.",
-      "- Shared inboxes: isolate DM sessions (`session.dmScope: per-channel-peer`) and keep tool access minimal.",
-      "- Keep secrets out of the agent’s reachable filesystem.",
-      "- Use the strongest available model for any bot with tools or untrusted inboxes.",
+      "建议的基准安全措施：",
+      "- 配对/白名单 + 提及过滤。",
+      "- 多用户/共享收件箱：划分信任边界（独立的网关/凭据，最好是独立的操作系统用户/主机）。",
+      "- 沙箱 + 最小权限工具。",
+      "- 共享收件箱：隔离私聊会话（`session.dmScope: per-channel-peer`）并保持工具访问权限最小化。",
+      "- 不要让代理访问到存储敏感信息的文件系统。",
+      "- 对于任何带有工具或处理不受信任收件箱的机器人，请使用最强大的可用模型。",
       "",
-      "Run regularly:",
+      "定期运行：",
       "openclaw security audit --deep",
       "openclaw security audit --fix",
       "",
-      "Must read: https://docs.openclaw.ai/gateway/security",
+      "必读文档：https://docs.openclaw.ai/gateway/security",
     ].join("\n"),
-    "Security",
+    "安全",
   );
 
   const ok = await params.prompter.confirm({
     message:
-      "I understand this is personal-by-default and shared/multi-user use requires lock-down. Continue?",
+      "我理解这是默认个人使用的，共享/多用户使用需要加固。是否继续？",
     initialValue: false,
   });
   if (!ok) {
@@ -77,33 +77,33 @@ export async function runOnboardingWizard(
 ) {
   const onboardHelpers = await import("../commands/onboard-helpers.js");
   onboardHelpers.printWizardHeader(runtime);
-  await prompter.intro("OpenClaw onboarding");
+  await prompter.intro("OpenClaw 配置向导");
   await requireRiskAcknowledgement({ opts, prompter });
 
   const snapshot = await readConfigFileSnapshot();
   let baseConfig: OpenClawConfig = snapshot.valid ? snapshot.config : {};
 
   if (snapshot.exists && !snapshot.valid) {
-    await prompter.note(onboardHelpers.summarizeExistingConfig(baseConfig), "Invalid config");
+    await prompter.note(onboardHelpers.summarizeExistingConfig(baseConfig), "无效配置");
     if (snapshot.issues.length > 0) {
       await prompter.note(
         [
           ...snapshot.issues.map((iss) => `- ${iss.path}: ${iss.message}`),
           "",
-          "Docs: https://docs.openclaw.ai/gateway/configuration",
+          "文档: https://docs.openclaw.ai/gateway/configuration",
         ].join("\n"),
-        "Config issues",
+        "配置问题",
       );
     }
     await prompter.outro(
-      `Config invalid. Run \`${formatCliCommand("openclaw doctor")}\` to repair it, then re-run onboarding.`,
+      `配置无效。运行 \`${formatCliCommand("openclaw doctor")}\` 进行修复，然后重新运行配置向导。`,
     );
     runtime.exit(1);
     return;
   }
 
-  const quickstartHint = `Configure details later via ${formatCliCommand("openclaw configure")}.`;
-  const manualHint = "Configure port, network, Tailscale, and auth options.";
+  const quickstartHint = `稍后可通过 ${formatCliCommand("openclaw configure")} 配置详细信息。`;
+  const manualHint = "配置端口、网络、Tailscale 和认证选项。";
   const explicitFlowRaw = opts.flow?.trim();
   const normalizedExplicitFlow = explicitFlowRaw === "manual" ? "advanced" : explicitFlowRaw;
   if (
@@ -111,7 +111,7 @@ export async function runOnboardingWizard(
     normalizedExplicitFlow !== "quickstart" &&
     normalizedExplicitFlow !== "advanced"
   ) {
-    runtime.error("Invalid --flow (use quickstart, manual, or advanced).");
+    runtime.error("无效的 --flow (请使用 quickstart, manual 或 advanced)。");
     runtime.exit(1);
     return;
   }
@@ -122,18 +122,18 @@ export async function runOnboardingWizard(
   let flow: WizardFlow =
     explicitFlow ??
     (await prompter.select({
-      message: "Onboarding mode",
+      message: "配置模式",
       options: [
-        { value: "quickstart", label: "QuickStart", hint: quickstartHint },
-        { value: "advanced", label: "Manual", hint: manualHint },
+        { value: "quickstart", label: "快速开始", hint: quickstartHint },
+        { value: "advanced", label: "手动配置", hint: manualHint },
       ],
       initialValue: "quickstart",
     }));
 
   if (opts.mode === "remote" && flow === "quickstart") {
     await prompter.note(
-      "QuickStart only supports local gateways. Switching to Manual mode.",
-      "QuickStart",
+      "快速开始仅支持本地网关。正在切换到手动模式。",
+      "快速开始",
     );
     flow = "advanced";
   }
@@ -141,15 +141,15 @@ export async function runOnboardingWizard(
   if (snapshot.exists) {
     await prompter.note(
       onboardHelpers.summarizeExistingConfig(baseConfig),
-      "Existing config detected",
+      "检测到现有配置",
     );
 
     const action = await prompter.select({
-      message: "Config handling",
+      message: "配置处理",
       options: [
-        { value: "keep", label: "Use existing values" },
-        { value: "modify", label: "Update values" },
-        { value: "reset", label: "Reset" },
+        { value: "keep", label: "使用现有值" },
+        { value: "modify", label: "更新数值" },
+        { value: "reset", label: "重置" },
       ],
     });
 
@@ -157,16 +157,16 @@ export async function runOnboardingWizard(
       const workspaceDefault =
         baseConfig.agents?.defaults?.workspace ?? onboardHelpers.DEFAULT_WORKSPACE;
       const resetScope = (await prompter.select({
-        message: "Reset scope",
+        message: "重置范围",
         options: [
-          { value: "config", label: "Config only" },
+          { value: "config", label: "仅重置配置" },
           {
             value: "config+creds+sessions",
-            label: "Config + creds + sessions",
+            label: "配置 + 凭据 + 会话",
           },
           {
             value: "full",
-            label: "Full reset (config + creds + sessions + workspace)",
+            label: "完全重置（配置 + 凭据 + 会话 + 工作区）",
           },
         ],
       })) as ResetScope;
@@ -229,24 +229,24 @@ export async function runOnboardingWizard(
   if (flow === "quickstart") {
     const formatBind = (value: "loopback" | "lan" | "auto" | "custom" | "tailnet") => {
       if (value === "loopback") {
-        return "Loopback (127.0.0.1)";
+        return "回环地址 (127.0.0.1)";
       }
       if (value === "lan") {
-        return "LAN";
+        return "局域网 (LAN)";
       }
       if (value === "custom") {
-        return "Custom IP";
+        return "自定义 IP";
       }
       if (value === "tailnet") {
         return "Tailnet (Tailscale IP)";
       }
-      return "Auto";
+      return "自动";
     };
     const formatAuth = (value: GatewayAuthChoice) => {
       if (value === "token") {
-        return "Token (default)";
+        return "令牌 (默认)";
       }
-      return "Password";
+      return "密码";
     };
     const formatTailscale = (value: "off" | "serve" | "funnel") => {
       if (value === "off") {

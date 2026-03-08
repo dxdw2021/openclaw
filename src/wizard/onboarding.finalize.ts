@@ -68,7 +68,7 @@ export async function finalizeOnboardingWizard(
     process.platform === "linux" ? await isSystemdUserServiceAvailable() : true;
   if (process.platform === "linux" && !systemdAvailable) {
     await prompter.note(
-      "Systemd user services are unavailable. Skipping lingering checks and service install.",
+      "Systemd 用户服务不可用。跳过驻留检查和服务安装。",
       "Systemd",
     );
   }
@@ -82,7 +82,7 @@ export async function finalizeOnboardingWizard(
         note: prompter.note,
       },
       reason:
-        "Linux installs use a systemd user service by default. Without lingering, systemd stops the user session on logout/idle and kills the Gateway.",
+        "Linux 安装默认使用 systemd 用户服务。如果不启用驻留 (lingering)，systemd 会在注销/闲置时停止用户会话并终止网关。",
       requireConfirm: false,
     });
   }
@@ -98,15 +98,15 @@ export async function finalizeOnboardingWizard(
     installDaemon = true;
   } else {
     installDaemon = await prompter.confirm({
-      message: "Install Gateway service (recommended)",
+      message: "安装网关服务（推荐）",
       initialValue: true,
     });
   }
 
   if (process.platform === "linux" && !systemdAvailable && installDaemon) {
     await prompter.note(
-      "Systemd user services are unavailable; skipping service install. Use your container supervisor or `docker compose up -d`.",
-      "Gateway service",
+      "Systemd 用户服务不可用；跳过服务安装。请使用您的容器管理器或 `docker compose up -d`。",
+      "网关服务",
     );
     installDaemon = false;
   }
@@ -116,33 +116,33 @@ export async function finalizeOnboardingWizard(
       flow === "quickstart"
         ? DEFAULT_GATEWAY_DAEMON_RUNTIME
         : await prompter.select({
-            message: "Gateway service runtime",
+            message: "网关服务运行时",
             options: GATEWAY_DAEMON_RUNTIME_OPTIONS,
             initialValue: opts.daemonRuntime ?? DEFAULT_GATEWAY_DAEMON_RUNTIME,
           });
     if (flow === "quickstart") {
       await prompter.note(
-        "QuickStart uses Node for the Gateway service (stable + supported).",
-        "Gateway service runtime",
+        "快速开始使用 Node 运行网关服务（稳定且受支持）。",
+        "网关服务运行时",
       );
     }
     const service = resolveGatewayService();
     const loaded = await service.isLoaded({ env: process.env });
     if (loaded) {
       const action = await prompter.select({
-        message: "Gateway service already installed",
+        message: "网关服务已安装",
         options: [
-          { value: "restart", label: "Restart" },
-          { value: "reinstall", label: "Reinstall" },
-          { value: "skip", label: "Skip" },
+          { value: "restart", label: "重启" },
+          { value: "reinstall", label: "重新安装" },
+          { value: "skip", label: "跳过" },
         ],
       });
       if (action === "restart") {
         await withWizardProgress(
-          "Gateway service",
-          { doneMessage: "Gateway service restarted." },
+          "网关服务",
+          { doneMessage: "网关服务已重启。" },
           async (progress) => {
-            progress.update("Restarting Gateway service…");
+            progress.update("正在重启网关服务…");
             await service.restart({
               env: process.env,
               stdout: process.stdout,
@@ -151,10 +151,10 @@ export async function finalizeOnboardingWizard(
         );
       } else if (action === "reinstall") {
         await withWizardProgress(
-          "Gateway service",
-          { doneMessage: "Gateway service uninstalled." },
+          "网关服务",
+          { doneMessage: "网关服务已卸载。" },
           async (progress) => {
-            progress.update("Uninstalling Gateway service…");
+            progress.update("正在卸载网关服务…");
             await service.uninstall({ env: process.env, stdout: process.stdout });
           },
         );
@@ -162,22 +162,22 @@ export async function finalizeOnboardingWizard(
     }
 
     if (!loaded || (loaded && !(await service.isLoaded({ env: process.env })))) {
-      const progress = prompter.progress("Gateway service");
+      const progress = prompter.progress("网关服务");
       let installError: string | null = null;
       try {
-        progress.update("Preparing Gateway service…");
+        progress.update("正在准备网关服务…");
         const tokenResolution = await resolveGatewayInstallToken({
           config: nextConfig,
           env: process.env,
         });
         for (const warning of tokenResolution.warnings) {
-          await prompter.note(warning, "Gateway service");
+          await prompter.note(warning, "网关服务");
         }
         if (tokenResolution.unavailableReason) {
           installError = [
-            "Gateway install blocked:",
+            "网关安装被阻止：",
             tokenResolution.unavailableReason,
-            "Fix gateway auth config/token input and rerun onboarding.",
+            "修复网关认证配置/令牌输入，然后重新运行配置向导。",
           ].join(" ");
         } else {
           const { programArguments, workingDirectory, environment } = await buildGatewayInstallPlan(
@@ -191,7 +191,7 @@ export async function finalizeOnboardingWizard(
             },
           );
 
-          progress.update("Installing Gateway service…");
+          progress.update("正在安装网关服务…");
           await service.install({
             env: process.env,
             stdout: process.stdout,
@@ -204,12 +204,12 @@ export async function finalizeOnboardingWizard(
         installError = err instanceof Error ? err.message : String(err);
       } finally {
         progress.stop(
-          installError ? "Gateway service install failed." : "Gateway service installed.",
+          installError ? "网关服务安装失败。" : "网关服务安装成功。",
         );
       }
       if (installError) {
-        await prompter.note(`Gateway service install failed: ${installError}`, "Gateway");
-        await prompter.note(gatewayInstallErrorHint(), "Gateway");
+        await prompter.note(`网关服务安装失败：${installError}`, "网关");
+        await prompter.note(gatewayInstallErrorHint(), "网关");
       }
     }
   }
@@ -233,11 +233,11 @@ export async function finalizeOnboardingWizard(
       runtime.error(formatHealthCheckFailure(err));
       await prompter.note(
         [
-          "Docs:",
+          "文档:",
           "https://docs.openclaw.ai/gateway/health",
           "https://docs.openclaw.ai/gateway/troubleshooting",
         ].join("\n"),
-        "Health check help",
+        "健康检查帮助",
       );
     }
   }

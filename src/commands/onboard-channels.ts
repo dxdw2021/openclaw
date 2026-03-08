@@ -44,7 +44,7 @@ type ChannelStatusSummary = {
 };
 
 function formatAccountLabel(accountId: string): string {
-  return accountId === DEFAULT_ACCOUNT_ID ? "default (primary)" : accountId;
+  return accountId === DEFAULT_ACCOUNT_ID ? "默认 (主账号)" : accountId;
 }
 
 async function promptConfiguredAction(params: {
@@ -56,19 +56,19 @@ async function promptConfiguredAction(params: {
   const { prompter, label, supportsDisable, supportsDelete } = params;
   const updateOption: WizardSelectOption<ConfiguredChannelAction> = {
     value: "update",
-    label: "Modify settings",
+    label: "修改设置",
   };
   const disableOption: WizardSelectOption<ConfiguredChannelAction> = {
     value: "disable",
-    label: "Disable (keeps config)",
+    label: "禁用（保留配置）",
   };
   const deleteOption: WizardSelectOption<ConfiguredChannelAction> = {
     value: "delete",
-    label: "Delete config",
+    label: "删除配置",
   };
   const skipOption: WizardSelectOption<ConfiguredChannelAction> = {
     value: "skip",
-    label: "Skip (leave as-is)",
+    label: "跳过（保持原样）",
   };
   const options: Array<WizardSelectOption<ConfiguredChannelAction>> = [
     updateOption,
@@ -77,7 +77,7 @@ async function promptConfiguredAction(params: {
     skipOption,
   ];
   return await prompter.select({
-    message: `${label} already configured. What do you want to do?`,
+    message: `${label} 已配置。您想做什么？`,
     options,
     initialValue: "update",
   });
@@ -100,7 +100,7 @@ async function promptRemovalAccountId(params: {
     return defaultAccountId;
   }
   const selected = await prompter.select({
-    message: `${label} account`,
+    message: `${label} 账号`,
     options: accountIds.map((accountId) => ({
       value: accountId,
       label: formatAccountLabel(accountId),
@@ -135,20 +135,20 @@ async function collectChannelStatus(params: {
     .filter((meta) => !statusByChannel.has(meta.id))
     .map((meta) => {
       const configured = isChannelConfigured(params.cfg, meta.id);
-      const statusLabel = configured ? "configured (plugin disabled)" : "not configured";
+      const statusLabel = configured ? "已配置 (插件已禁用)" : "未配置";
       return {
         channel: meta.id,
         configured,
         statusLines: [`${meta.label}: ${statusLabel}`],
-        selectionHint: configured ? "configured · plugin disabled" : "not configured",
+        selectionHint: configured ? "已配置 · 插件已禁用" : "未配置",
         quickstartScore: 0,
       };
     });
   const catalogStatuses = catalogEntries.map((entry) => ({
     channel: entry.id,
     configured: false,
-    statusLines: [`${entry.meta.label}: install plugin to enable`],
-    selectionHint: "plugin · install",
+    statusLines: [`${entry.meta.label}: 安装插件以启用`],
+    selectionHint: "插件 · 安装",
     quickstartScore: 0,
   }));
   const combinedStatuses = [...statusEntries, ...fallbackStatuses, ...catalogStatuses];
@@ -174,7 +174,7 @@ export async function noteChannelStatus(params: {
     accountOverrides: params.accountOverrides ?? {},
   });
   if (statusLines.length > 0) {
-    await params.prompter.note(statusLines.join("\n"), "Channel status");
+    await params.prompter.note(statusLines.join("\n"), "频道状态");
   }
 }
 
@@ -193,17 +193,17 @@ async function noteChannelPrimer(
   );
   await prompter.note(
     [
-      "DM security: default is pairing; unknown DMs get a pairing code.",
-      `Approve with: ${formatCliCommand("openclaw pairing approve <channel> <code>")}`,
-      'Public DMs require dmPolicy="open" + allowFrom=["*"].',
-      "Multi-user DMs: run: " +
+      "私聊安全：默认为配对模式；未知的私聊将获得一个配对码。",
+      `使用此命令批准：${formatCliCommand("openclaw pairing approve <channel> <code>")}`,
+      '公开私聊需要设置 dmPolicy="open" 且 allowFrom=["*"]。',
+      "多用户私聊：运行：" +
         formatCliCommand('openclaw config set session.dmScope "per-channel-peer"') +
-        ' (or "per-account-channel-peer" for multi-account channels) to isolate sessions.',
-      `Docs: ${formatDocsLink("/channels/pairing", "channels/pairing")}`,
+        '（或对于多账号频道使用 "per-account-channel-peer"）来隔离会话。',
+      `文档：${formatDocsLink("/channels/pairing", "channels/pairing")}`,
       "",
       ...channelLines,
     ].join("\n"),
-    "How channels work",
+    "频道工作原理",
   );
 }
 
@@ -237,7 +237,7 @@ async function maybeConfigureDmPolicies(params: {
   }
 
   const wants = await prompter.confirm({
-    message: "Configure DM access policies now? (default: pairing)",
+    message: "现在配置私聊访问策略吗？（默认：配对模式）",
     initialValue: false,
   });
   if (!wants) {

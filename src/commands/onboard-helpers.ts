@@ -30,7 +30,7 @@ import type { NodeManagerChoice, OnboardMode, ResetScope } from "./onboard-types
 
 export function guardCancel<T>(value: T | symbol, runtime: RuntimeEnv): T {
   if (isCancel(value)) {
-    cancel(stylePromptTitle("Setup cancelled.") ?? "Setup cancelled.");
+    cancel(stylePromptTitle("配置已取消。") ?? "配置已取消。");
     runtime.exit(0);
     throw new Error("unreachable");
   }
@@ -41,30 +41,30 @@ export function summarizeExistingConfig(config: OpenClawConfig): string {
   const rows: string[] = [];
   const defaults = config.agents?.defaults;
   if (defaults?.workspace) {
-    rows.push(shortenHomeInString(`workspace: ${defaults.workspace}`));
+    rows.push(shortenHomeInString(`工作区: ${defaults.workspace}`));
   }
   if (defaults?.model) {
     const model = resolveAgentModelPrimaryValue(defaults.model);
     if (model) {
-      rows.push(shortenHomeInString(`model: ${model}`));
+      rows.push(shortenHomeInString(`模型: ${model}`));
     }
   }
   if (config.gateway?.mode) {
-    rows.push(shortenHomeInString(`gateway.mode: ${config.gateway.mode}`));
+    rows.push(shortenHomeInString(`网关模式: ${config.gateway.mode}`));
   }
   if (typeof config.gateway?.port === "number") {
-    rows.push(shortenHomeInString(`gateway.port: ${config.gateway.port}`));
+    rows.push(shortenHomeInString(`网关端口: ${config.gateway.port}`));
   }
   if (config.gateway?.bind) {
-    rows.push(shortenHomeInString(`gateway.bind: ${config.gateway.bind}`));
+    rows.push(shortenHomeInString(`网关绑定: ${config.gateway.bind}`));
   }
   if (config.gateway?.remote?.url) {
-    rows.push(shortenHomeInString(`gateway.remote.url: ${config.gateway.remote.url}`));
+    rows.push(shortenHomeInString(`远程网关 URL: ${config.gateway.remote.url}`));
   }
   if (config.skills?.install?.nodeManager) {
-    rows.push(shortenHomeInString(`skills.nodeManager: ${config.skills.install.nodeManager}`));
+    rows.push(shortenHomeInString(`插件包管理器: ${config.skills.install.nodeManager}`));
   }
-  return rows.length ? rows.join("\n") : "No key settings detected.";
+  return rows.length ? rows.join("\n") : "未检测到关键设置。";
 }
 
 export function randomToken(): string {
